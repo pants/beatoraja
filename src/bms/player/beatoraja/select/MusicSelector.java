@@ -548,6 +548,8 @@ public class MusicSelector extends MainState {
 
 		if (input.getNumberState()[6]) {
 			changeState(MainStateType.CONFIG);
+		} else if(input.getNumberState()[9]){
+			changeState(MainStateType.MULTIPLAYER_LOBBIES);
 		} else if (input.isActivated(KeyCommand.OPEN_SKIN_CONFIGURATION)) {
 			changeState(MainStateType.SKINCONFIG);
 		}
