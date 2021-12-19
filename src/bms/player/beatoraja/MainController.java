@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import bms.player.beatoraja.config.Discord;
+import bms.player.beatoraja.multiplayer.MultiplayerLobbies;
 import org.lwjgl.input.Mouse;
 
 import com.badlogic.gdx.*;
@@ -68,6 +69,7 @@ public class MainController extends ApplicationAdapter {
 	private MusicResult result;
 	private CourseResult gresult;
 	private KeyConfiguration keyconfig;
+	private MultiplayerLobbies multiplayerLobbies;
 	private SkinConfiguration skinconfig;
 
 	private AudioDriver audio;
@@ -336,6 +338,7 @@ public class MainController extends ApplicationAdapter {
 		result = new MusicResult(this);
 		gresult = new CourseResult(this);
 		keyconfig = new KeyConfiguration(this);
+		multiplayerLobbies = new MultiplayerLobbies(this);
 		skinconfig = new SkinConfiguration(this, player);
 		if (bmsfile != null) {
 			if(resource.setBMSFile(bmsfile, auto)) {
