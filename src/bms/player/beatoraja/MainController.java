@@ -119,7 +119,7 @@ public class MainController extends ApplicationAdapter {
 	private Thread screenshot;
 
 	private MusicDownloadProcessor download;
-	
+
 	private StreamController streamController;
 
 	public static final int timerCount = SkinProperty.TIMER_MAX + 1;
@@ -270,6 +270,11 @@ public class MainController extends ApplicationAdapter {
 		case SKINCONFIG:
 			newState = skinconfig;
 			break;
+        case MULTIPLAYER_LOBBIES:
+		    newState = multiplayerLobbies;
+            break;
+        case MULTIPLAYER_LOBBY:
+                break;
 		}
 
 		if (newState != null && current != newState) {
