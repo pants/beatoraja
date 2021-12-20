@@ -63,7 +63,12 @@ public class MultiplayerLobbies extends MainState {
 
         multiplayerRooms = new ArrayList<>();
         serverConnection = new MPServerConnection(this);
-        serverConnection.connect("45.56.99.79", 39079);
+
+        final String server = main.getConfig().getMultiplayerServer();
+        final String remoteAddress = server.split(":")[0];
+
+        final int port = server.contains(":") ? Integer.parseInt(server.split(":")[1]) : 39079;
+        serverConnection.connect(remoteAddress, port);
 
         serverConnection.subscribeToPacket("server.rooms", this::onServerRooms);
 

@@ -388,12 +388,18 @@
                         </VBox.margin>
                     </Button>
                     <CheckBox fx:id="enableIpfs" mnemonicParsing="false" prefHeight="18.0" text="%ENABLE_IPFS" />
-                    <HBox prefHeight="100.0" prefWidth="300.0">
+                    <HBox prefHeight="70.0" prefWidth="300.0">
                         <children>
                            <Label prefHeight="25.0" prefWidth="60.0" text="IPFS URL" />
                            <TextField fx:id="ipfsurl" prefHeight="25.0" prefWidth="200.0" />
                         </children>
                      </HBox>
+                    <HBox prefHeight="100.0" prefWidth="300.0">
+                        <children>
+                            <Label prefHeight="25.0" prefWidth="100.0" text="Multiplayer Server" />
+                            <TextField fx:id="multiplayerhost" prefHeight="25.0" prefWidth="200.0" />
+                        </children>
+                    </HBox>
                <VBox prefHeight="150.0" prefWidth="100.0" visible="false">
                   <children>
                      <HBox prefHeight="31.0" prefWidth="780.0">
