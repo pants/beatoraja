@@ -2,6 +2,10 @@ package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.UserAuth;
+import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
+import bms.player.beatoraja.multiplayer.packets.in.ServerInfo;
+import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
+import bms.player.beatoraja.multiplayer.types.RoomType;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
@@ -11,13 +15,11 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public class MPServerConnection extends Thread {
 
-    private final MultiplayerLobbies multiplayerLobbies;
     private Socket serverSocket;
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
@@ -27,12 +29,17 @@ public class MPServerConnection extends Thread {
     private boolean connected = false;
 
     private int refreshRate = 500;
+    private String userId = null;
 
     private HashMap<String, Consumer<Packet>> packetSubscriptions = new HashMap<>();
     private PacketProcessor packetProcessor;
+    private RoomType roomInfo = null;
 
-    public MPServerConnection(MultiplayerLobbies multiplayerLobbies) {
-        this.multiplayerLobbies = multiplayerLobbies;
+    public boolean joinRoom = false;
+
+    private RoomUpdate lastRoomUpdate = null;
+
+    public MPServerConnection() {
         this.packetProcessor = new PacketProcessor(this);
     }
 
@@ -55,6 +62,9 @@ public class MPServerConnection extends Thread {
 
     @Override
     public void run() {
+        subscribeToPacket("server.info", this::onServerInfo);
+        subscribeToPacket("server.room.joined", this::onServerRoomJoined);
+        subscribeToPacket("room.update", this::onRoomUpdate);
         try {
             while (!serverSocket.isClosed()) {
                 final byte packetMode = inputStream.readByte();
@@ -67,7 +77,7 @@ public class MPServerConnection extends Thread {
 
                 final String jsonPacket = new String(bos.toByteArray(), StandardCharsets.UTF_8);
                 JsonValue jsonValue = new JsonReader().parse(jsonPacket);
-                if(jsonValue.has("topic")){
+                if (jsonValue.has("topic")) {
                     final String topic = jsonValue.getString("topic");
                     Logger.getGlobal().info("Received packet: " + jsonValue.getString("topic"));
                     Logger.getGlobal().info("Data: " + jsonPacket);
@@ -85,7 +95,7 @@ public class MPServerConnection extends Thread {
         }
     }
 
-    public void auth(String name, String password, String version) {
+    public void authenticate(String name, String password, String version) {
         sendPacket(new UserAuth(password, name, version));
     }
 
@@ -130,4 +140,31 @@ public class MPServerConnection extends Thread {
         this.packetSubscriptions.remove(topic);
     }
 
+    private void onServerRoomJoined(Packet packet) {
+        this.roomInfo = ((ServerRoomJoined)packet).getRoom();
+        this.joinRoom = true;
+    }
+
+    private void onRoomUpdate(Packet packet) {
+        RoomUpdate roomUpdate = (RoomUpdate) packet;
+        this.lastRoomUpdate = roomUpdate;
+    }
+
+    public void onServerInfo(Packet packet) {
+        ServerInfo info = (ServerInfo) packet;
+        this.refreshRate = info.getRefreshRate();
+        this.userId = info.getUserid();
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public RoomType getRoomInfo() {
+        return roomInfo;
+    }
+
+    public RoomUpdate getLastRoomUpdate() {
+        return lastRoomUpdate;
+    }
 }

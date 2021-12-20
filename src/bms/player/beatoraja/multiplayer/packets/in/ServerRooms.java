@@ -1,13 +1,13 @@
 package bms.player.beatoraja.multiplayer.packets.in;
 
-import bms.player.beatoraja.multiplayer.ServerRoom;
+import bms.player.beatoraja.multiplayer.types.RoomType;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 
 public class ServerRooms implements Packet {
     private String topic;
-    private ServerRoom[] rooms;
+    private RoomType[] rooms;
 
-    public ServerRoom[] getRooms() {
+    public RoomType[] getRooms() {
         return rooms;
     }
 }

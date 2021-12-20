@@ -1,7 +1,9 @@
 package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.multiplayer.packets.Packet;
+import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.in.ServerInfo;
+import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
 import bms.player.beatoraja.multiplayer.packets.in.ServerRooms;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
@@ -20,6 +22,8 @@ public class PacketProcessor {
         this.serverConnection = serverConnection;
         packets.put("server.info", ServerInfo.class);
         packets.put("server.rooms", ServerRooms.class);
+        packets.put("server.room.joined", ServerRoomJoined.class);
+        packets.put("room.update", RoomUpdate.class);
     }
 
     public void processPacket(String topic, String jsonStr) {
