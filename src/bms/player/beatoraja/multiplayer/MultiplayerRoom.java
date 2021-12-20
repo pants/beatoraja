@@ -34,6 +34,7 @@ public class MultiplayerRoom extends MainState {
 
     private MPServerConnection server;
     private String lastChartHash = null;
+    private SongData selectedChart;
 
     private boolean missingChart = false;
 
@@ -71,7 +72,7 @@ public class MultiplayerRoom extends MainState {
     }
 
     private void updateChart(SongData songData, boolean setChart) {
-        final String chartHash = songData.getCharthash();
+        final String chartHash = songData.getSha256();
 
         if (!chartHash.equals(lastChartHash)) {
             if (chartTitleFont != null) {
@@ -89,11 +90,12 @@ public class MultiplayerRoom extends MainState {
             chartTitleFont = generator.generateFont(parameter);
 
             if (setChart) {
-                server.sendPacket(new RoomSetSong(songData.getTitle(), songData.getDifficulty(), songData.getLevel(), songData.getCharthash()));
+                server.sendPacket(new RoomSetSong(songData.getTitle(), songData.getDifficulty(), songData.getLevel(), songData.getSha256()));
             }
         }
 
-        lastChartHash = main.getPlayerResource().getSongdata().getCharthash();
+        selectedChart = songData;
+        lastChartHash = songData.getSha256();
     }
 
     @Override
@@ -110,6 +112,11 @@ public class MultiplayerRoom extends MainState {
 
     @Override
     public void render() {
+        if (server.pendingChartUpdateHash != null) {
+            findAndUpdateChart(server.pendingChartUpdateHash);
+            server.pendingChartUpdateHash = null;
+        }
+
         final SpriteBatch sprite = main.getSpriteBatch();
         final float scaleX = (float) getSkin().getScaleX();
         final float scaleY = (float) getSkin().getScaleY();
@@ -170,12 +177,12 @@ public class MultiplayerRoom extends MainState {
 
             for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
                 UserType userType = roomData.getProperties().getUsers()[i];
-                titlefont.draw(sprite, userType.getName(), 80 * scaleX, (640 + 26 * i) * scaleY);
+                titlefont.draw(sprite, userType.getName(), 80 * scaleX, (640 - 26 * i) * scaleY);
             }
 
             //chart title:
             if (lastChartHash != null) {
-                SongData data = main.getPlayerResource().getSongdata();
+                SongData data = selectedChart;
                 chartTitleFont.draw(sprite, data.getTitle() + " " + data.getSubtitle(), getSkin().getWidth() - 470, getSkin().getHeight() - 80);
                 chartTitleFont.draw(sprite, data.getFullArtist(), getSkin().getWidth() - 470, getSkin().getHeight() - 110);
                 titlefont.draw(sprite, "lv" +

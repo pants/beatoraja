@@ -38,6 +38,7 @@ public class MPServerConnection extends Thread {
     private final PacketProcessor packetProcessor;
     private final RoomData roomData;
 
+    public String pendingChartUpdateHash = null;
     public boolean joinRoom = false;
 
     public MPServerConnection(MainController main) {

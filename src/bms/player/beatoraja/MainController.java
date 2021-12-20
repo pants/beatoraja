@@ -784,10 +784,6 @@ public class MainController extends ApplicationAdapter {
         return multiplayerServer;
     }
 
-    public MultiplayerRoom getMultiplayerRoom() {
-        return multiplayerRoom;
-    }
-
     abstract class UpdateThread extends Thread {
 
         protected String message;

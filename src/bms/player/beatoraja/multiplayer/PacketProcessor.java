@@ -66,10 +66,13 @@ public class PacketProcessor {
     }
 
     private void onRoomUpdate(RoomUpdate packet) {
-        server.getRoomData().updateRoom(packet);
+        final RoomData roomData = server.getRoomData();
+        final String chartHash = packet.getChartHash();
 
-        if (!server.getRoomData().getProperties().getChartHash().equals(packet.getChartHash())) {
-            main.getMultiplayerRoom().findAndUpdateChart(packet.getChartHash());
+        roomData.updateRoom(packet);
+
+        if (chartHash != null) {
+            server.pendingChartUpdateHash = chartHash;
         }
     }
 
