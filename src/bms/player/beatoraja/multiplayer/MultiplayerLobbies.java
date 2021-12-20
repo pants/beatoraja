@@ -38,8 +38,6 @@ public class MultiplayerLobbies extends MainState {
 
     private MPServerConnection server;
 
-    private List<RoomType> multiplayerRooms;
-
     public MultiplayerLobbies(MainController main) {
         super(main);
     }
@@ -62,12 +60,9 @@ public class MultiplayerLobbies extends MainState {
         keyboard = input.getKeyBoardInputProcesseor();
         config = main.getPlayerResource().getPlayerConfig();
 
-        multiplayerRooms = new ArrayList<>();
         server = main.getMultiplayerServer();
 
-        server.subscribeToPacket("server.rooms", this::onServerRooms);
-
-        if(!server.isConnected()) {
+        if (!server.isConnected()) {
             final String serverAddress = main.getConfig().getMultiplayerServer();
             final String host = serverAddress.split(":")[0];
             final int port = serverAddress.contains(":") ? Integer.parseInt(serverAddress.split(":")[1]) : 39079;
@@ -84,7 +79,7 @@ public class MultiplayerLobbies extends MainState {
 
     @Override
     public void render() {
-        if(server.joinRoom){
+        if (server.joinRoom) {
             server.joinRoom = false;
             main.changeState(MainStateType.MULTIPLAYER_LOBBY);
             return;
@@ -128,7 +123,7 @@ public class MultiplayerLobbies extends MainState {
         shape.end();
 
         //Stacked boxes which will contain the name of each room
-        for (int i = 0; i < multiplayerRooms.size(); i++) {
+        for (int i = 0; i < server.getAvailableRooms().size(); i++) {
             shape.begin(ShapeRenderer.ShapeType.Line);
             shape.setColor(Color.CYAN);
             final Rectangle roomButton = new Rectangle(90 * scaleX, baseRoomY * scaleY - (50 * i), 300, 40);
@@ -138,7 +133,7 @@ public class MultiplayerLobbies extends MainState {
             if (roomButton.contains(input.getMouseX(), input.getMouseY())) {
                 createButtonColor = Color.valueOf("55ffff");
                 if (input.getMouseButton() == 0 && input.isMousePressed()) {
-                    RoomType room = multiplayerRooms.get(i);
+                    RoomType room = server.getAvailableRooms().get(i);
                     server.sendPacket(new ServerRoomJoin(room.getId(), null, null));
                 }
             } else {
@@ -154,17 +149,17 @@ public class MultiplayerLobbies extends MainState {
         sprite.begin();
         //Title
         titlefont.setColor(Color.CYAN);
-        titlefont.draw(sprite, "Available Lobbies (" + multiplayerRooms.size() + ")", 80 * scaleX, 680 * scaleY);
+        titlefont.draw(sprite, "Available Lobbies (" + server.getAvailableRooms().size() + ")", 80 * scaleX, 680 * scaleY);
 
         if (!server.isConnected()) {
             titlefont.setColor(Color.WHITE);
             titlefont.draw(sprite, "Connecting to server...", 90 * scaleX, 380 * scaleY);
-        } else if (multiplayerRooms.isEmpty()) {
+        } else if (server.getAvailableRooms().isEmpty()) {
             titlefont.draw(sprite, "No rooms found!", 90 * scaleX, 380 * scaleY);
         } else {
             //Room name inside previously stacked boxes
-            for (int i = 0; i < multiplayerRooms.size(); i++) {
-                RoomType room = multiplayerRooms.get(i);
+            for (int i = 0; i < server.getAvailableRooms().size(); i++) {
+                RoomType room = server.getAvailableRooms().get(i);
                 titlefont.setColor(Color.CYAN);
                 titlefont.draw(sprite, room.getName(), 100 * scaleX, (baseRoomY + 28) * scaleY - (50 * i));
             }
@@ -187,18 +182,5 @@ public class MultiplayerLobbies extends MainState {
             shape.dispose();
             shape = null;
         }
-    }
-
-
-
-    public void onServerRooms(Packet packet) {
-        final ServerRooms rooms = ((ServerRooms) packet);
-
-        if (rooms.getRooms() == null) {
-            System.out.println("No rooms lol");
-            return;
-        }
-
-        multiplayerRooms.addAll(Arrays.asList(rooms.getRooms()));
     }
 }

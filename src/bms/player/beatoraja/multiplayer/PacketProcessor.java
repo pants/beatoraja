@@ -1,25 +1,28 @@
 package bms.player.beatoraja.multiplayer;
 
+import bms.player.beatoraja.MainController;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.in.ServerInfo;
 import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
 import bms.player.beatoraja.multiplayer.packets.in.ServerRooms;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.JsonWriter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class PacketProcessor {
 
-    public MPServerConnection serverConnection;
+    private final MainController main;
+    public MPServerConnection server;
 
     private HashMap<String, Class<? extends Packet>> packets = new HashMap<>();
 
-    public PacketProcessor(MPServerConnection serverConnection) {
-        this.serverConnection = serverConnection;
+    public PacketProcessor(MainController main, MPServerConnection serverConnection) {
+        this.main = main;
+        this.server = serverConnection;
+
         packets.put("server.info", ServerInfo.class);
         packets.put("server.rooms", ServerRooms.class);
         packets.put("server.room.joined", ServerRoomJoined.class);
@@ -35,6 +38,44 @@ public class PacketProcessor {
         }
 
         Class<? extends Packet> e = packets.get(topic);
-        serverConnection.notifySubscriber(topic, json.fromJson(e, jsonStr));
+        Packet packet = json.fromJson(e, jsonStr);
+
+        if (packet instanceof ServerInfo) {
+            onServerInfo((ServerInfo) packet);
+        } else if (packet instanceof ServerRooms) {
+            onServerRooms((ServerRooms) packet);
+        } else if (packet instanceof RoomUpdate) {
+            onRoomUpdate((RoomUpdate) packet);
+        } else if (packet instanceof ServerRoomJoined) {
+            onServerRoomJoined((ServerRoomJoined) packet);
+        }
     }
+
+    private void onServerInfo(ServerInfo info) {
+        server.setRefreshRate(info.getRefreshRate());
+        server.setUserId(info.getUserid());
+    }
+
+    private void onServerRooms(ServerRooms packet) {
+        if (packet.getRooms() == null) {
+            server.getAvailableRooms().clear();
+            return;
+        }
+
+        server.getAvailableRooms().addAll(Arrays.asList(packet.getRooms()));
+    }
+
+    private void onRoomUpdate(RoomUpdate packet) {
+        server.getRoomData().updateRoom(packet);
+
+        if (!server.getRoomData().getProperties().getChartHash().equals(packet.getChartHash())) {
+            main.getMultiplayerRoom().findAndUpdateChart(packet.getChartHash());
+        }
+    }
+
+    private void onServerRoomJoined(ServerRoomJoined packet) {
+        server.getRoomData().setRoomInfo(packet.getRoom());
+        server.joinRoom = true;
+    }
+
 }

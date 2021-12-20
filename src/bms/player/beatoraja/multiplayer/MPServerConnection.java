@@ -1,10 +1,11 @@
 package bms.player.beatoraja.multiplayer;
 
+import bms.player.beatoraja.MainController;
+import bms.player.beatoraja.MainState;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.UserAuth;
 import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
-import bms.player.beatoraja.multiplayer.packets.in.ServerInfo;
-import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
+import bms.player.beatoraja.multiplayer.packets.out.RoomLeave;
 import bms.player.beatoraja.multiplayer.types.RoomType;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
@@ -14,12 +15,13 @@ import com.badlogic.gdx.utils.JsonWriter;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class MPServerConnection extends Thread {
 
+    private final MainController main;
     private Socket serverSocket;
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
@@ -31,16 +33,17 @@ public class MPServerConnection extends Thread {
     private int refreshRate = 500;
     private String userId = null;
 
-    private HashMap<String, Consumer<Packet>> packetSubscriptions = new HashMap<>();
-    private PacketProcessor packetProcessor;
-    private RoomType roomInfo = null;
+    private final List<RoomType> availableRooms = new ArrayList<>();
+
+    private final PacketProcessor packetProcessor;
+    private final RoomData roomData;
 
     public boolean joinRoom = false;
 
-    private RoomUpdate lastRoomUpdate = null;
-
-    public MPServerConnection() {
-        this.packetProcessor = new PacketProcessor(this);
+    public MPServerConnection(MainController main) {
+        this.main = main;
+        this.packetProcessor = new PacketProcessor(main, this);
+        this.roomData = new RoomData();
     }
 
     public void connect(String host, int port) {
@@ -62,9 +65,6 @@ public class MPServerConnection extends Thread {
 
     @Override
     public void run() {
-        subscribeToPacket("server.info", this::onServerInfo);
-        subscribeToPacket("server.room.joined", this::onServerRoomJoined);
-        subscribeToPacket("room.update", this::onRoomUpdate);
         try {
             while (!serverSocket.isClosed()) {
                 final byte packetMode = inputStream.readByte();
@@ -116,6 +116,13 @@ public class MPServerConnection extends Thread {
         }
     }
 
+    public void leaveRoom() {
+        main.changeState(MainState.MainStateType.MULTIPLAYER_LOBBIES);
+        getRoomData().setRoomInfo(null);
+        getRoomData().updateRoom(null);
+        sendPacket(new RoomLeave());
+    }
+
     public void disconnect() {
         try {
             inputStream.close();
@@ -126,45 +133,31 @@ public class MPServerConnection extends Thread {
         }
     }
 
-    public void notifySubscriber(String topic, Packet packet) {
-        if (packetSubscriptions.containsKey(topic)) {
-            packetSubscriptions.get(topic).accept(packet);
-        }
-    }
-
-    public void subscribeToPacket(String topic, Consumer<Packet> callback) {
-        this.packetSubscriptions.put(topic, callback);
-    }
-
-    public void unsubscribeFromPacket(String topic, Consumer<Packet> callback) {
-        this.packetSubscriptions.remove(topic);
-    }
-
-    private void onServerRoomJoined(Packet packet) {
-        this.roomInfo = ((ServerRoomJoined)packet).getRoom();
-        this.joinRoom = true;
-    }
-
-    private void onRoomUpdate(Packet packet) {
-        RoomUpdate roomUpdate = (RoomUpdate) packet;
-        this.lastRoomUpdate = roomUpdate;
-    }
-
-    public void onServerInfo(Packet packet) {
-        ServerInfo info = (ServerInfo) packet;
-        this.refreshRate = info.getRefreshRate();
-        this.userId = info.getUserid();
-    }
-
     public String getUserId() {
         return userId;
     }
 
-    public RoomType getRoomInfo() {
-        return roomInfo;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public RoomUpdate getLastRoomUpdate() {
-        return lastRoomUpdate;
+    public RoomData getRoomData() {
+        return roomData;
+    }
+
+    public int getRefreshRate() {
+        return refreshRate;
+    }
+
+    public void setRefreshRate(int refreshRate) {
+        this.refreshRate = refreshRate;
+    }
+
+    public List<RoomType> getAvailableRooms() {
+        return availableRooms;
+    }
+
+    public boolean isUserInRoom() {
+        return isConnected() && getRoomData().getRoomInfo() != null;
     }
 }

@@ -558,8 +558,7 @@ public class MusicSelector extends MainState {
 	}
 
 	public void changeState(MainStateType type) {
-		if(main.getMultiplayerServer().isConnected() && main.getMultiplayerServer().getRoomInfo() != null
-				&& type == MainStateType.DECIDE){
+		if(main.getMultiplayerServer().isUserInRoom() && type == MainStateType.DECIDE){
 			type = MainStateType.MULTIPLAYER_LOBBY;
 		}
 
