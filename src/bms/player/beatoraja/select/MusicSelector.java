@@ -78,17 +78,17 @@ public class MusicSelector extends MainState {
 	 * 楽曲が選択されてからプレビュー曲を再生するまでの時間(ms)
 	 */
 	private final int previewDuration = 400;
-	
+
 	private final int rankingDuration = 5000;
 	private final int rankingReloadDuration = 10 * 60 * 1000;
-	
+
 	private long currentRankingDuration = -1;
 
 	private boolean showNoteGraph = false;
 
 	private ScoreDataCache scorecache;
 	private ScoreDataCache rivalcache;
-	
+
 	private RankingData currentir;
 	private RankingDataCache ircache = new RankingDataCache();
 	/**
@@ -151,16 +151,16 @@ public class MusicSelector extends MainState {
 						Logger.getGlobal().info("IRからのスコアインポート完了");
 					} else {
 						Logger.getGlobal().warning("IRからのスコアインポート失敗 : " + scores.getMessage());
-					}					
+					}
 				} catch (Throwable e) {
 					e.printStackTrace();
 				}
 			}
-			
+
 			IRResponse<IRPlayerData[]> response = main.getIRStatus()[0].connection.getRivals();
 			if(response.isSucceeded()) {
 				try {
-					
+
 					// ライバルスコアデータベース作成
 					// TODO 別のクラスに移動
 					if(!Files.exists(Paths.get("rival"))) {
@@ -170,7 +170,7 @@ public class MusicSelector extends MainState {
 					// ライバルキャッシュ作成
 					Array<PlayerInformation> rivals = new Array();
 					Array<ScoreDataCache> rivalcaches = new Array();
-					
+
 					if(main.getIRStatus()[0].config.isImportrival()) {
 						for(IRPlayerData irplayer : response.getData()) {
 							final PlayerInformation rival = new PlayerInformation();
@@ -178,7 +178,7 @@ public class MusicSelector extends MainState {
 							rival.setName(irplayer.name);
 							rival.setRank(irplayer.rank);
 							final ScoreDatabaseAccessor scoredb = new ScoreDatabaseAccessor("rival/" + main.getIRStatus()[0].config.getIrname() + rival.getId() + ".db");
-							
+
 							rivals.add(rival);
 							rivalcaches.add(new ScoreDataCache() {
 
@@ -204,7 +204,7 @@ public class MusicSelector extends MainState {
 							}).start();
 						}
 					}
-					
+
 					try (DirectoryStream<Path> paths = Files.newDirectoryStream(Paths.get("rival"))) {
 						for (Path p : paths) {
 							boolean exists = false;
@@ -217,7 +217,7 @@ public class MusicSelector extends MainState {
 							if(exists) {
 								continue;
 							}
-							
+
 							if(p.toString().endsWith(".db")) {
 								final ScoreDatabaseAccessor scoredb = new ScoreDatabaseAccessor(p.toString());
 								PlayerInformation info = scoredb.getInformation();
@@ -266,7 +266,7 @@ public class MusicSelector extends MainState {
 			main.updateSong(null);
 		}
 	}
-	
+
 	private ScoreData[] convert(IRScoreData[] irscores) {
 		ScoreData[] scores = new ScoreData[irscores.length];
 		for(int i = 0;i < scores.length;i++) {
@@ -275,7 +275,7 @@ public class MusicSelector extends MainState {
 			score.setSha256(irscore.sha256);
 			score.setMode(irscore.lntype);
 			score.setPlayer(irscore.player);
-			score.setClear(irscore.clear.id); 
+			score.setClear(irscore.clear.id);
 			score.setDate(irscore.date);
 			score.setEpg(irscore.epg);
 			score.setLpg(irscore.lpg);
@@ -298,7 +298,7 @@ public class MusicSelector extends MainState {
 			score.setAssist(irscore.assist);
 			score.setGauge(irscore.gauge);
 			score.setDeviceType(irscore.deviceType);
-			
+
 			scores[i] = score;
 		}
 		return scores;
@@ -429,7 +429,7 @@ public class MusicSelector extends MainState {
 				}
 				irc.load(this, song);
 	            currentir = irc;
-			}				
+			}
 			if (current instanceof GradeBar && ((GradeBar) current).existsAllSongs() && play == null) {
 				CourseData course = ((GradeBar) current).getCourseData();
 				RankingData irc = ircache.get(course, config.getLnmode());
@@ -439,7 +439,7 @@ public class MusicSelector extends MainState {
 				}
 				irc.load(this, course);
 	            currentir = irc;
-			}				
+			}
 		}
 		final int irstate = currentir != null ? currentir.getState() : -1;
 		main.switchTimer(TIMER_IR_CONNECT_BEGIN, irstate == RankingData.ACCESS);
@@ -477,7 +477,7 @@ public class MusicSelector extends MainState {
 						}
 						resource.setRankingData(currentir);
 						resource.setRivalScoreData(current.getRivalScore());
-						
+
 						playedsong = song;
 						changeState(MainStateType.DECIDE);
 					} else {
@@ -556,8 +556,13 @@ public class MusicSelector extends MainState {
 
 		musicinput.input();
 	}
-	
+
 	public void changeState(MainStateType type) {
+		if(main.getMultiplayerServer().isConnected() && main.getMultiplayerServer().getRoomInfo() != null
+				&& type == MainStateType.DECIDE){
+			type = MainStateType.MULTIPLAYER_LOBBY;
+		}
+
 		preview.stop();
 		main.changeState(type);
 		if (search != null) {
@@ -650,7 +655,7 @@ public class MusicSelector extends MainState {
 			resource.setCourseData(course.getCourseData());
 			resource.setBMSFile(files[0], mode);
 			playedcourse = course.getCourseData();
-			
+
 			if(main.getIRStatus().length > 0 && currentir == null) {
 				currentir = new RankingData();
 	            ircache.put(course.getCourseData(), config.getLnmode(), currentir);
@@ -754,11 +759,11 @@ public class MusicSelector extends MainState {
 				currentRankingDuration = (currentir != null ? Math.max(rankingReloadDuration - (System.currentTimeMillis() - currentir.getLastUpdateTime()) ,0) : 0) + rankingDuration;
 			} else {
 				currentir = null;
-				currentRankingDuration = -1;			
+				currentRankingDuration = -1;
 			}
 		} else {
 			currentir = null;
-			currentRankingDuration = -1;			
+			currentRankingDuration = -1;
 		}
 	}
 
@@ -799,24 +804,24 @@ public class MusicSelector extends MainState {
 		}
 		return pc;
 	}
-	
+
 	public RankingData getCurrentRankingData() {
 		return currentir;
 	}
-	
+
 	public long getCurrentRankingDuration() {
 		return currentRankingDuration;
 	}
-	
+
 	public int getRankingOffset() {
 		return rankingOffset;
 	}
-	
+
 	public float getRankingPosition() {
 		final int rankingMax = currentir != null ? Math.max(1, currentir.getTotalPlayer()) : 1;
-		return (float)rankingOffset / rankingMax;		
+		return (float)rankingOffset / rankingMax;
 	}
-	
+
 	public void setRankingPosition(float value) {
 		if (value >= 0 && value < 1) {
 			final int rankingMax = currentir != null ? Math.max(1, currentir.getTotalPlayer()) : 1;
@@ -878,7 +883,7 @@ public class MusicSelector extends MainState {
 	        final int cacheindex = song.hasUndefinedLongNote() ? lnmode : 3;
 	        scorecache[cacheindex].put(song.getSha256(), iras);
 	    }
-	    
+
 	    public void put(CourseData course, int lnmode, RankingData iras) {
 	        int cacheindex = 3;
 	        for(SongData song : course.getSong()) {
@@ -888,7 +893,7 @@ public class MusicSelector extends MainState {
 	        }
 	        cscorecache[cacheindex].put(createCourseHash(course), iras);
 	    }
-	    
+
 		private String createCourseHash(CourseData course) {
 			StringBuilder sb = new StringBuilder();
 			for(SongData song : course.getSong()) {

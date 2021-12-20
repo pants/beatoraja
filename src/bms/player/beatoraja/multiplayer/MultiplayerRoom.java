@@ -10,10 +10,13 @@ import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
 import bms.player.beatoraja.multiplayer.packets.out.ServerRoomJoin;
+import bms.player.beatoraja.multiplayer.packets.out.ServerRoomNew;
 import bms.player.beatoraja.multiplayer.types.RoomType;
 import bms.player.beatoraja.multiplayer.types.UserType;
 import bms.player.beatoraja.skin.SkinType;
+import bms.player.beatoraja.song.SongData;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -21,6 +24,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+
+import java.util.logging.Logger;
+
+import static bms.player.beatoraja.skin.SkinProperty.TIMER_FADEOUT;
+import static bms.player.beatoraja.skin.SkinProperty.TIMER_STARTINPUT;
 
 public class MultiplayerRoom extends MainState {
 
@@ -32,6 +40,7 @@ public class MultiplayerRoom extends MainState {
     private PlayerConfig config;
 
     private MPServerConnection server;
+    private String lastChartHash = null;
 
     public MultiplayerRoom(MainController main) {
         super(main);
@@ -56,9 +65,28 @@ public class MultiplayerRoom extends MainState {
         config = main.getPlayerResource().getPlayerConfig();
 
         server = main.getMultiplayerServer();
+
+        final SongData songData = main.getPlayerResource().getSongdata();
+        if (songData != null) {
+            final String chartHash = songData.getCharthash();
+            if (!chartHash.equals(lastChartHash)) {
+                Logger.getGlobal().info("CHANGING CHART!!!");
+            }
+            lastChartHash = main.getPlayerResource().getSongdata().getCharthash();
+        } else {
+            lastChartHash = null;
+        }
     }
 
-
+    @Override
+    public void input() {
+        if (input.getKeyBoardInputProcesseor().getLastPressedKey() != -1) {
+            int lastPressedKey = keyboard.getLastPressedKey();
+            if (lastPressedKey == Input.Keys.NUM_2) {
+                main.changeState(MainStateType.MUSICSELECT);
+            }
+        }
+    }
 
     @Override
     public void render() {
@@ -81,7 +109,7 @@ public class MultiplayerRoom extends MainState {
 
         sprite.begin();
         titlefont.setColor(Color.CYAN);
-        if(server.getRoomInfo() != null && server.getLastRoomUpdate() != null){
+        if (server.getRoomInfo() != null && server.getLastRoomUpdate() != null) {
             String line = String.format("%s (%s/%s)",
                     server.getRoomInfo().getName(),
                     server.getLastRoomUpdate().getUsers().length, server.getRoomInfo().getMax());

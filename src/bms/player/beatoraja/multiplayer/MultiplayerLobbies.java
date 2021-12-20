@@ -78,6 +78,11 @@ public class MultiplayerLobbies extends MainState {
     }
 
     @Override
+    public void input() {
+
+    }
+
+    @Override
     public void render() {
         if(server.joinRoom){
             server.joinRoom = false;
