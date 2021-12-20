@@ -11,6 +11,7 @@ import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
 import bms.player.beatoraja.multiplayer.packets.out.ServerRoomJoin;
 import bms.player.beatoraja.multiplayer.types.RoomType;
+import bms.player.beatoraja.multiplayer.types.UserType;
 import bms.player.beatoraja.skin.SkinType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -71,12 +72,9 @@ public class MultiplayerRoom extends MainState {
         sprite.begin();
         shape.begin(ShapeRenderer.ShapeType.Line);
         shape.setColor(Color.WHITE);
-        shape.rect(80 * scaleX, 100, getSkin().getWidth() - 160, getSkin().getHeight() - 170);
+        shape.rect(80 * scaleX, 100, 400, getSkin().getHeight() - 170);
+        shape.rect(80 * scaleX, 100, 400, getSkin().getHeight() - 170);
         shape.end();
-
-//        for (int i = 0; i < lastRoomUpdate.getUsers().length; i++) {
-//
-//        }
 
         sprite.end();
 
@@ -89,6 +87,11 @@ public class MultiplayerRoom extends MainState {
                     server.getLastRoomUpdate().getUsers().length, server.getRoomInfo().getMax());
 
             titlefont.draw(sprite, line, 80 * scaleX, 680 * scaleY);
+
+            for (int i = 0; i < server.getLastRoomUpdate().getUsers().length; i++) {
+                UserType userType = server.getLastRoomUpdate().getUsers()[i];
+                titlefont.draw(sprite, userType.getName(), 80 * scaleX, (640 + 26 * i) * scaleY);
+            }
         } else {
             titlefont.draw(sprite, "Loading..", 80 * scaleX, 680 * scaleY);
         }

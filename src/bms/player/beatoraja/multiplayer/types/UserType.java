@@ -10,4 +10,16 @@ public class UserType {
     private int combo;
     private int clear; //0 exit, 1 failed, 2 clear, 3 hard clear, 4 fc
     private String extra_data;
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public boolean isMissingMap() {
+        return missing_map;
+    }
 }
