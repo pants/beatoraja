@@ -74,7 +74,13 @@ public class MultiplayerLobbies extends MainState {
 
     @Override
     public void input() {
-
+        if (input.getKeyBoardInputProcesseor().getLastPressedKey() != -1) {
+            int lastPressedKey = keyboard.getLastPressedKey();
+            if (lastPressedKey == Input.Keys.NUM_1) {
+                server.sendPacket(new ServerRoomNew(config.getName() + "'s Room!", null));
+                keyboard.setLastPressedKey(-1);
+            }
+        }
     }
 
     @Override
@@ -90,14 +96,6 @@ public class MultiplayerLobbies extends MainState {
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        if (input.getKeyBoardInputProcesseor().getLastPressedKey() != -1) {
-            int lastPressedKey = keyboard.getLastPressedKey();
-            if (lastPressedKey == Input.Keys.NUM_1) {
-                server.sendPacket(new ServerRoomNew(config.getName() + "'s Room!", null));
-                keyboard.setLastPressedKey(-1);
-            }
-        }
 
         final Rectangle createRoomDimensions = new Rectangle(80 * scaleX, 40, 200 * scaleX, 40 * scaleY);
         Color createButtonColor;
