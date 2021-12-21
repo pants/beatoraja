@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import bms.player.beatoraja.ir.IRPlayerData;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.*;
@@ -549,7 +550,7 @@ public class MusicSelector extends MainState {
 
 		if (input.getControlKeyState(ControlKeys.NUM6)) {
 			changeState(MainStateType.CONFIG);
-		} else if(input.getNumberState()[9]){
+		} else if(input.getControlKeyState(ControlKeys.NUM9)){
 			changeState(MainStateType.MULTIPLAYER_LOBBIES);
 		} else if (input.isActivated(KeyCommand.OPEN_SKIN_CONFIGURATION)) {
 			changeState(MainStateType.SKINCONFIG);
