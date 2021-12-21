@@ -102,16 +102,27 @@ public class MultiplayerRoom extends MainState {
     public void input() {
         if (input.getKeyBoardInputProcesseor().getLastPressedKey() != -1) {
             int lastPressedKey = keyboard.getLastPressedKey();
+            keyboard.setLastPressedKey(-1);
+
             if (lastPressedKey == Input.Keys.NUM_2) {
                 main.changeState(MainStateType.MUSICSELECT);
             } else if (lastPressedKey == Input.Keys.NUM_3) {
                 main.changeState(MainStateType.DECIDE);
+            } else if (lastPressedKey == Input.Keys.NUM_6) {
+                server.getRoomData().toggleReady();
+            } else if (lastPressedKey == Input.Keys.NUM_7) {
+                server.getRoomData().startGame();
             }
         }
     }
 
     @Override
     public void render() {
+        if (server.pendingGameStart) {
+            server.pendingGameStart = false;
+            startChart();
+            return;
+        }
         if (server.pendingChartUpdateHash != null) {
             findAndUpdateChart(server.pendingChartUpdateHash);
             server.pendingChartUpdateHash = null;
@@ -177,7 +188,10 @@ public class MultiplayerRoom extends MainState {
 
             for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
                 UserType userType = roomData.getProperties().getUsers()[i];
-                titlefont.draw(sprite, userType.getName(), 80 * scaleX, (640 - 26 * i) * scaleY);
+                Color readyColor = userType.isReady() ? Color.CYAN : Color.GREEN;
+                String hostId = roomData.getProperties().getHost();
+                titlefont.setColor(hostId.equals(userType.getId()) ? Color.GOLD : readyColor);
+                titlefont.draw(sprite, userType.getName(), 90 * scaleX, (640 - 26 * i) * scaleY);
             }
 
             //chart title:
@@ -185,12 +199,16 @@ public class MultiplayerRoom extends MainState {
                 SongData data = selectedChart;
                 chartTitleFont.draw(sprite, data.getTitle() + " " + data.getSubtitle(), getSkin().getWidth() - 470, getSkin().getHeight() - 80);
                 chartTitleFont.draw(sprite, data.getFullArtist(), getSkin().getWidth() - 470, getSkin().getHeight() - 110);
+                titlefont.setColor(Color.CYAN);
                 titlefont.draw(sprite, "lv" +
                         "" + data.getLevel(), getSkin().getWidth() - 470, getSkin().getHeight() - 140);
             }
         } else {
             titlefont.draw(sprite, "Loading..", 80 * scaleX, 680 * scaleY);
         }
+
+        titlefont.draw(sprite, (server.getRoomData().isReady() ? "Unready" : "Ready") + " [6]", 90 * scaleX, 68 * scaleY);
+        titlefont.draw(sprite, "Start Game [7]", 230 * scaleX, 68 * scaleY);
         sprite.end();
     }
 
@@ -208,7 +226,7 @@ public class MultiplayerRoom extends MainState {
     }
 
     public void startChart() {
-        final SongData songData = main.getPlayerResource().getSongdata();
+        final SongData songData = selectedChart;
         if (main.getPlayerResource().setBMSFile(Paths.get(songData.getPath()), BMSPlayerMode.PLAY)) {
             main.changeState(MainStateType.DECIDE);
         }

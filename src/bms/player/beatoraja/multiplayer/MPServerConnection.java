@@ -39,12 +39,13 @@ public class MPServerConnection extends Thread {
     private final RoomData roomData;
 
     public String pendingChartUpdateHash = null;
+    public boolean pendingGameStart = false;
     public boolean joinRoom = false;
 
     public MPServerConnection(MainController main) {
         this.main = main;
         this.packetProcessor = new PacketProcessor(main, this);
-        this.roomData = new RoomData();
+        this.roomData = new RoomData(this);
     }
 
     public void connect(String host, int port) {
@@ -107,6 +108,7 @@ public class MPServerConnection extends Thread {
 
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bos.write(1);
+            String jsonStr = json.toJson(packet);
             bos.write(json.toJson(packet).getBytes());
             bos.write((byte) '\n');
 

@@ -2,10 +2,7 @@ package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.MainController;
 import bms.player.beatoraja.multiplayer.packets.Packet;
-import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
-import bms.player.beatoraja.multiplayer.packets.in.ServerInfo;
-import bms.player.beatoraja.multiplayer.packets.in.ServerRoomJoined;
-import bms.player.beatoraja.multiplayer.packets.in.ServerRooms;
+import bms.player.beatoraja.multiplayer.packets.in.*;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
 
@@ -27,6 +24,7 @@ public class PacketProcessor {
         packets.put("server.rooms", ServerRooms.class);
         packets.put("server.room.joined", ServerRoomJoined.class);
         packets.put("room.update", RoomUpdate.class);
+        packets.put("game.started", GameStarted.class);
     }
 
     public void processPacket(String topic, String jsonStr) {
@@ -48,6 +46,8 @@ public class PacketProcessor {
             onRoomUpdate((RoomUpdate) packet);
         } else if (packet instanceof ServerRoomJoined) {
             onServerRoomJoined((ServerRoomJoined) packet);
+        } else if (packet instanceof GameStarted) {
+            onGameStarted((GameStarted) packet);
         }
     }
 
@@ -79,6 +79,10 @@ public class PacketProcessor {
     private void onServerRoomJoined(ServerRoomJoined packet) {
         server.getRoomData().setRoomInfo(packet.getRoom());
         server.joinRoom = true;
+    }
+
+    private void onGameStarted(GameStarted gameStarted) {
+        server.pendingGameStart = true;
     }
 
 }

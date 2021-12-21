@@ -22,4 +22,8 @@ public class UserType {
     public boolean isMissingMap() {
         return missing_map;
     }
+
+    public String getId() {
+        return id;
+    }
 }
