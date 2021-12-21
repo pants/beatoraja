@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import static bms.player.beatoraja.skin.SkinProperty.*;
 
@@ -123,6 +124,7 @@ public class MultiplayerRoom extends MainState {
             startChart();
             return;
         }
+
         if (server.pendingChartUpdateHash != null) {
             findAndUpdateChart(server.pendingChartUpdateHash);
             server.pendingChartUpdateHash = null;
@@ -187,10 +189,15 @@ public class MultiplayerRoom extends MainState {
             titlefont.draw(sprite, line, 80 * scaleX, 680 * scaleY);
 
             for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
-                UserType userType = roomData.getProperties().getUsers()[i];
-                Color readyColor = userType.isReady() ? Color.CYAN : Color.GREEN;
-                String hostId = roomData.getProperties().getHost();
-                titlefont.setColor(hostId.equals(userType.getId()) ? Color.GOLD : readyColor);
+                final UserType userType = roomData.getProperties().getUsers()[i];
+                final Color readyColor = userType.isReady() ? Color.CYAN : Color.GREEN;
+
+                //host is null when in-game
+                final String hostId = Optional.ofNullable(roomData.getProperties().getHost()).orElse("");
+                titlefont.setColor(
+                        hostId.equals(userType.getId())
+                                ? Color.GOLD : readyColor
+                );
                 titlefont.draw(sprite, userType.getName(), 90 * scaleX, (640 - 26 * i) * scaleY);
             }
 
@@ -203,12 +210,12 @@ public class MultiplayerRoom extends MainState {
                 titlefont.draw(sprite, "lv" +
                         "" + data.getLevel(), getSkin().getWidth() - 470, getSkin().getHeight() - 140);
             }
+
+            titlefont.draw(sprite, (server.getRoomData().isReady() ? "Unready" : "Ready") + " [6]", 90 * scaleX, 68 * scaleY);
+            titlefont.draw(sprite, "Start Game [7]", 230 * scaleX, 68 * scaleY);
         } else {
             titlefont.draw(sprite, "Loading..", 80 * scaleX, 680 * scaleY);
         }
-
-        titlefont.draw(sprite, (server.getRoomData().isReady() ? "Unready" : "Ready") + " [6]", 90 * scaleX, 68 * scaleY);
-        titlefont.draw(sprite, "Start Game [7]", 230 * scaleX, 68 * scaleY);
         sprite.end();
     }
 
@@ -223,6 +230,15 @@ public class MultiplayerRoom extends MainState {
             missingChart = true;
             server.sendPacket(new UserNoMap());
         }
+    }
+
+    @Override
+    public void dispose() {
+        if (titlefont != null) {
+            titlefont.dispose();
+            titlefont = null;
+        }
+        super.dispose();
     }
 
     public void startChart() {

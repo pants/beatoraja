@@ -174,6 +174,11 @@ public class MusicResult extends AbstractResult {
 				final BMSPlayerInputProcessor input = main.getInputProcessor();
 				main.getInputProcessor().resetAllKeyChangedTime();
 
+                if (main.getMultiplayerServer().isUserInRoom()) {
+                    main.changeState(MainStateType.MULTIPLAYER_LOBBY);
+                    return;
+                }
+
 				if (resource.getCourseBMSModels() != null) {
 					if (resource.getGauge()[resource.getGrooveGauge().getType()]
 							.get(resource.getGauge()[resource.getGrooveGauge().getType()].size - 1) <= 0) {
