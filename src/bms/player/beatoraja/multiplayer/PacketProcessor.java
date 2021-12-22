@@ -3,6 +3,7 @@ package bms.player.beatoraja.multiplayer;
 import bms.player.beatoraja.MainController;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.in.*;
+import bms.player.beatoraja.play.BMSPlayer;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
 
@@ -25,6 +26,7 @@ public class PacketProcessor {
         packets.put("server.room.joined", ServerRoomJoined.class);
         packets.put("room.update", RoomUpdate.class);
         packets.put("game.started", GameStarted.class);
+        packets.put("game.sync.start", GameSyncStart.class);
     }
 
     public void processPacket(String topic, String jsonStr) {
@@ -48,6 +50,8 @@ public class PacketProcessor {
             onServerRoomJoined((ServerRoomJoined) packet);
         } else if (packet instanceof GameStarted) {
             onGameStarted((GameStarted) packet);
+        } else if (packet instanceof GameSyncStart) {
+            onGameSyncStart((GameSyncStart) packet);
         }
     }
 
@@ -85,4 +89,10 @@ public class PacketProcessor {
         server.pendingGameStart = true;
     }
 
+    private void onGameSyncStart(GameSyncStart gameSyncStart) {
+        if (main.getCurrentState() instanceof BMSPlayer) {
+            BMSPlayer player = (BMSPlayer) main.getCurrentState();
+            player.setReadyState();
+        }
+    }
 }

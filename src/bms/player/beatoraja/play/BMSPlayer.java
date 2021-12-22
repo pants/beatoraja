@@ -88,6 +88,7 @@ public class BMSPlayer extends MainState {
 	public static final int STATE_PLAY = 4;
 	public static final int STATE_FAILED = 5;
 	public static final int STATE_FINISHED = 6;
+	public static final int STATE_WAITING_FOR_PLAYERS = 7;
 
 	private long prevtime;
 
@@ -524,7 +525,7 @@ public class BMSPlayer extends MainState {
 				final long cmem = Runtime.getRuntime().freeMemory();
 				Logger.getGlobal().info("current free memory : " + (cmem / (1024 * 1024)) + "MB , disposed : "
 						+ ((cmem - mem) / (1024 * 1024)) + "MB");
-				state = STATE_READY;
+				state = main.getMultiplayerServer().isUserInRoom() ? STATE_WAITING_FOR_PLAYERS : STATE_READY;
 				main.setTimerOn(TIMER_READY);
 				play(SOUND_READY);
 				Logger.getGlobal().info("STATE_READYに移行");
@@ -606,6 +607,11 @@ public class BMSPlayer extends MainState {
 			}
 			break;
 			// GET READY
+		case STATE_WAITING_FOR_PLAYERS:
+			if(!main.getMultiplayerServer().syncedReady){
+				main.getMultiplayerServer().syncReady();
+			}
+			break;
 		case STATE_READY:
 			if (main.getNowTime(TIMER_READY) > skin.getPlaystart()) {
 				replayConfig = lanerender.getPlayConfig().clone();
@@ -817,6 +823,10 @@ public class BMSPlayer extends MainState {
 		}
 
 		prevtime = micronow;
+	}
+
+	public void setReadyState(){
+		this.state = STATE_READY;
 	}
 
 	public void setPlaySpeed(int playspeed) {

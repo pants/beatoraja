@@ -9,6 +9,7 @@ import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.out.RoomLeave;
 import bms.player.beatoraja.multiplayer.packets.out.RoomScoreFinal;
 import bms.player.beatoraja.multiplayer.packets.out.RoomScoreUpdate;
+import bms.player.beatoraja.multiplayer.packets.out.TopicPacket;
 import bms.player.beatoraja.multiplayer.types.RoomType;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
@@ -45,6 +46,7 @@ public class MPServerConnection extends Thread {
     public String pendingChartUpdateHash = null;
     public boolean pendingGameStart = false;
     public boolean joinRoom = false;
+    public boolean syncedReady = false;
 
     public MPServerConnection(MainController main) {
         this.main = main;
@@ -140,6 +142,11 @@ public class MPServerConnection extends Thread {
     public void submitFinalScore() {
         final ScoreData scoreData = main.getPlayerResource().getScoreData();
         sendPacket(new RoomScoreFinal(scoreData.getExscore(), scoreData.getCombo(), scoreData.getClear()));
+    }
+
+    public void syncReady() {
+        syncedReady = true;
+        sendPacket(new TopicPacket("user.sync.ready"));
     }
 
     public void disconnect() {

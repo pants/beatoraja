@@ -72,6 +72,7 @@ public class MultiplayerRoom extends MainState {
             updateChart(songData, true);
         }
 
+        server.syncedReady = false;
         server.sendPacket(new TopicPacket("room.update.get"));
     }
 
