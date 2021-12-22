@@ -508,6 +508,11 @@ public class BMSPlayer extends MainState {
 		if(input.startPressed() || input.isSelectPressed()){
 			startpressedtime = now;
 		}
+
+		if(main.getMultiplayerServer().isUserInRoom() && resource.getScoreData() != null) {
+			main.getMultiplayerServer().updateScore(getPlaytime(), resource.getScoreData().getExscore());
+		}
+
 		switch (state) {
 		// 楽曲ロード
 		case STATE_PRELOAD:

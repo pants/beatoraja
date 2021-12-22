@@ -2,10 +2,13 @@ package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.MainController;
 import bms.player.beatoraja.MainState;
+import bms.player.beatoraja.ScoreData;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.UserAuth;
 import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.out.RoomLeave;
+import bms.player.beatoraja.multiplayer.packets.out.RoomScoreFinal;
+import bms.player.beatoraja.multiplayer.packets.out.RoomScoreUpdate;
 import bms.player.beatoraja.multiplayer.types.RoomType;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
@@ -30,6 +33,7 @@ public class MPServerConnection extends Thread {
     private int port;
     private boolean connected = false;
 
+    private long lastScoreUpdateMs = 0L;
     private int refreshRate = 500;
     private String userId = null;
 
@@ -124,6 +128,18 @@ public class MPServerConnection extends Thread {
         getRoomData().setRoomInfo(null);
         getRoomData().updateRoom(null);
         sendPacket(new RoomLeave());
+    }
+
+    public void updateScore(int time, int score) {
+        if (System.currentTimeMillis() - lastScoreUpdateMs > refreshRate) {
+            lastScoreUpdateMs = System.currentTimeMillis();
+            sendPacket(new RoomScoreUpdate(time, score));
+        }
+    }
+
+    public void submitFinalScore() {
+        final ScoreData scoreData = main.getPlayerResource().getScoreData();
+        sendPacket(new RoomScoreFinal(scoreData.getExscore(), scoreData.getCombo(), scoreData.getClear()));
     }
 
     public void disconnect() {

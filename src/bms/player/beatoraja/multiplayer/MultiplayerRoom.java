@@ -4,6 +4,7 @@ import bms.player.beatoraja.*;
 import bms.player.beatoraja.input.BMSPlayerInputProcessor;
 import bms.player.beatoraja.input.KeyBoardInputProcesseor;
 import bms.player.beatoraja.multiplayer.packets.out.RoomSetSong;
+import bms.player.beatoraja.multiplayer.packets.out.TopicPacket;
 import bms.player.beatoraja.multiplayer.packets.out.UserNoMap;
 import bms.player.beatoraja.multiplayer.types.UserType;
 import bms.player.beatoraja.skin.SkinType;
@@ -70,6 +71,8 @@ public class MultiplayerRoom extends MainState {
         if (songData != null) {
             updateChart(songData, true);
         }
+
+        server.sendPacket(new TopicPacket("room.update.get"));
     }
 
     private void updateChart(SongData songData, boolean setChart) {
@@ -190,7 +193,7 @@ public class MultiplayerRoom extends MainState {
 
             for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
                 final UserType userType = roomData.getProperties().getUsers()[i];
-                final Color readyColor = userType.isReady() ? Color.CYAN : Color.GREEN;
+                final Color readyColor = !userType.isReady() ? Color.CYAN : Color.GREEN;
 
                 //host is null when in-game
                 final String hostId = Optional.ofNullable(roomData.getProperties().getHost()).orElse("");
@@ -211,6 +214,7 @@ public class MultiplayerRoom extends MainState {
                         "" + data.getLevel(), getSkin().getWidth() - 470, getSkin().getHeight() - 140);
             }
 
+            final Color readyColor = !server.getRoomData().isReady() ? Color.CYAN : Color.GREEN;
             titlefont.draw(sprite, (server.getRoomData().isReady() ? "Unready" : "Ready") + " [6]", 90 * scaleX, 68 * scaleY);
             titlefont.draw(sprite, "Start Game [7]", 230 * scaleX, 68 * scaleY);
         } else {

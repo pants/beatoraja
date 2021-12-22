@@ -73,6 +73,10 @@ public class MusicResult extends AbstractResult {
 		gaugeType = resource.getGrooveGauge().getType();
 
 		loadSkin(SkinType.RESULT);
+
+		if(main.getMultiplayerServer().isUserInRoom()){
+			main.getMultiplayerServer().submitFinalScore();
+		}
 	}
 	
 	public void prepare() {
