@@ -112,7 +112,7 @@ public class MultiplayerRoom extends MainState {
             if (lastPressedKey == Input.Keys.NUM_2) {
                 main.changeState(MainStateType.MUSICSELECT);
             } else if (lastPressedKey == Input.Keys.NUM_3) {
-                main.changeState(MainStateType.DECIDE);
+                server.sendPacket(new TopicPacket("room.update.get"));
             } else if (lastPressedKey == Input.Keys.NUM_6) {
                 server.getRoomData().toggleReady();
             } else if (lastPressedKey == Input.Keys.NUM_7) {

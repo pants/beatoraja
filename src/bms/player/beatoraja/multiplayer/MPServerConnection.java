@@ -115,7 +115,7 @@ public class MPServerConnection extends Thread {
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bos.write(1);
             String jsonStr = json.toJson(packet);
-            bos.write(json.toJson(packet).getBytes());
+            bos.write(jsonStr.getBytes());
             bos.write((byte) '\n');
 
             outputStream.write(bos.toByteArray());
@@ -146,7 +146,7 @@ public class MPServerConnection extends Thread {
 
     public void syncReady() {
         syncedReady = true;
-        sendPacket(new TopicPacket("user.sync.ready"));
+        sendPacket(new TopicPacket("room.sync.ready"));
     }
 
     public void disconnect() {

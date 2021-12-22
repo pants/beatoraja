@@ -510,10 +510,6 @@ public class BMSPlayer extends MainState {
 			startpressedtime = now;
 		}
 
-		if(main.getMultiplayerServer().isUserInRoom() && resource.getScoreData() != null) {
-			main.getMultiplayerServer().updateScore(getPlaytime(), resource.getScoreData().getExscore());
-		}
-
 		switch (state) {
 		// 楽曲ロード
 		case STATE_PRELOAD:
@@ -646,6 +642,11 @@ public class BMSPlayer extends MainState {
 					gaugelog[i].add(gauge.getValue(i));
 				}
 			}
+
+			if(main.getMultiplayerServer().isUserInRoom() && judge.getScoreData() != null) {
+				main.getMultiplayerServer().updateScore((int) ptime, judge.getScoreData().getExscore());
+			}
+
 			main.switchTimer(TIMER_GAUGE_MAX_1P, gauge.getGauge().isMax());
 
 			if(main.isTimerOn(TIMER_PM_CHARA_1P_NEUTRAL) && main.getNowTime(TIMER_PM_CHARA_1P_NEUTRAL) >= skin.getPMcharaTime(TIMER_PM_CHARA_1P_NEUTRAL - TIMER_PM_CHARA_1P_NEUTRAL) && main.getNowTime(TIMER_PM_CHARA_1P_NEUTRAL) % skin.getPMcharaTime(TIMER_PM_CHARA_1P_NEUTRAL - TIMER_PM_CHARA_1P_NEUTRAL) < 17) {
