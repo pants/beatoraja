@@ -522,7 +522,7 @@ public class BMSPlayer extends MainState {
 				Logger.getGlobal().info("current free memory : " + (cmem / (1024 * 1024)) + "MB , disposed : "
 						+ ((cmem - mem) / (1024 * 1024)) + "MB");
 
-				if(main.getMultiplayerServer().isUserInRoom() && !main.getMultiplayerServer().isGameStarted()){
+				if(main.getMultiplayerServer().isUserInRoom() && !main.getMultiplayerServer().isGameStarted()) {
 					state = STATE_WAITING_FOR_PLAYERS;
 				} else {
 					state = STATE_READY;
@@ -610,7 +610,7 @@ public class BMSPlayer extends MainState {
 			break;
 			// GET READY
 		case STATE_WAITING_FOR_PLAYERS:
-			if(!main.getMultiplayerServer().syncedReady){
+			if(!main.getMultiplayerServer().syncedReady) {
 				main.getMultiplayerServer().syncReady();
 			}
 			break;
