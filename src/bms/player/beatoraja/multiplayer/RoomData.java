@@ -2,7 +2,6 @@ package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
 import bms.player.beatoraja.multiplayer.packets.out.TopicPacket;
-import bms.player.beatoraja.multiplayer.packets.out.UserReadyToggle;
 import bms.player.beatoraja.multiplayer.types.RoomType;
 import bms.player.beatoraja.multiplayer.types.UserType;
 

@@ -6,7 +6,7 @@ public class UserType {
     private boolean ready;
     private boolean missing_map;
     private int level;
-    private int score;
+    private Integer score;
     private int combo;
     private int clear; //0 exit, 1 failed, 2 clear, 3 hard clear, 4 fc
     private String extra_data;
@@ -25,5 +25,13 @@ public class UserType {
 
     public String getId() {
         return id;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public int getClear() {
+        return clear;
     }
 }

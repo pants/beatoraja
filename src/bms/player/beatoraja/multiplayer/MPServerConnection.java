@@ -1,12 +1,9 @@
 package bms.player.beatoraja.multiplayer;
 
 import bms.player.beatoraja.MainController;
-import bms.player.beatoraja.MainState;
 import bms.player.beatoraja.ScoreData;
 import bms.player.beatoraja.multiplayer.packets.Packet;
 import bms.player.beatoraja.multiplayer.packets.UserAuth;
-import bms.player.beatoraja.multiplayer.packets.in.RoomUpdate;
-import bms.player.beatoraja.multiplayer.packets.out.RoomLeave;
 import bms.player.beatoraja.multiplayer.packets.out.RoomScoreFinal;
 import bms.player.beatoraja.multiplayer.packets.out.RoomScoreUpdate;
 import bms.player.beatoraja.multiplayer.packets.out.TopicPacket;
@@ -23,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class MPServerConnection extends Thread {
+public class MPServerConnection implements Runnable {
 
     private final MainController main;
     private Socket serverSocket;
@@ -49,23 +46,31 @@ public class MPServerConnection extends Thread {
     public boolean syncedReady = false;
     private boolean gameStarted;
 
+    private Thread serverThread;
+
     public MPServerConnection(MainController main) {
         this.main = main;
         this.packetProcessor = new PacketProcessor(main, this);
         this.roomData = new RoomData(this);
     }
 
-    public void connect(String host, int port) {
+    public boolean connect(String host, int port) {
         this.host = host;
         this.port = port;
         try {
             serverSocket = new Socket(host, port);
             outputStream = new DataOutputStream(serverSocket.getOutputStream());
             inputStream = new DataInputStream(serverSocket.getInputStream());
+
+            serverThread = new Thread(this);
+            serverThread.start();
+
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.start();
+
+        return false;
     }
 
     public boolean isConnected() {
@@ -75,7 +80,7 @@ public class MPServerConnection extends Thread {
     @Override
     public void run() {
         try {
-            while (!serverSocket.isClosed()) {
+            while (!serverSocket.isClosed() && !serverThread.isInterrupted()) {
                 final byte packetMode = inputStream.readByte();
                 final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
@@ -126,11 +131,14 @@ public class MPServerConnection extends Thread {
         }
     }
 
+    public void sendTopicPacket(String topic) {
+        sendPacket(new TopicPacket(topic));
+    }
+
     public void leaveRoom() {
-        main.changeState(MainState.MainStateType.MULTIPLAYER_LOBBIES);
         getRoomData().setRoomInfo(null);
         getRoomData().updateRoom(null);
-        sendPacket(new RoomLeave());
+        sendTopicPacket("room.leave");
     }
 
     public void updateScore(int time, int score) {
@@ -151,6 +159,9 @@ public class MPServerConnection extends Thread {
     }
 
     public void disconnect() {
+        connected = false;
+        serverThread.interrupt();
+
         try {
             inputStream.close();
             outputStream.close();

@@ -5,7 +5,6 @@ import bms.player.beatoraja.input.BMSPlayerInputProcessor;
 import bms.player.beatoraja.input.KeyBoardInputProcesseor;
 import bms.player.beatoraja.multiplayer.packets.out.RoomSetSong;
 import bms.player.beatoraja.multiplayer.packets.out.TopicPacket;
-import bms.player.beatoraja.multiplayer.packets.out.UserNoMap;
 import bms.player.beatoraja.multiplayer.types.UserType;
 import bms.player.beatoraja.skin.SkinType;
 import bms.player.beatoraja.song.SongData;
@@ -120,6 +119,11 @@ public class MultiplayerRoom extends MainState {
                 server.getRoomData().startGame();
             }
         }
+
+        if (input.isControlKeyPressed(KeyBoardInputProcesseor.ControlKeys.ESCAPE)) {
+            server.leaveRoom();
+            main.changeState(MainStateType.MULTIPLAYER_LOBBIES);
+        }
     }
 
     @Override
@@ -193,18 +197,7 @@ public class MultiplayerRoom extends MainState {
 
             titlefont.draw(sprite, line, 80 * scaleX, 680 * scaleY);
 
-            for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
-                final UserType userType = roomData.getProperties().getUsers()[i];
-                final Color readyColor = !userType.isReady() ? Color.CYAN : Color.GREEN;
-
-                //host is null when in-game
-                final String hostId = Optional.ofNullable(roomData.getProperties().getHost()).orElse("");
-                titlefont.setColor(
-                        hostId.equals(userType.getId())
-                                ? Color.GOLD : readyColor
-                );
-                titlefont.draw(sprite, userType.getName(), 90 * scaleX, (640 - 26 * i) * scaleY);
-            }
+            renderUsers(sprite, roomData);
 
             //chart title:
             if (lastChartHash != null) {
@@ -225,6 +218,32 @@ public class MultiplayerRoom extends MainState {
         sprite.end();
     }
 
+    private void renderUsers(SpriteBatch sprite, RoomData roomData) {
+        for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
+            final UserType userType = roomData.getProperties().getUsers()[i];
+
+            //host is null when in-game
+            final String hostId = Optional.ofNullable(roomData.getProperties().getHost()).orElse("");
+            if(hostId.equals(userType.getId())){
+                titlefont.setColor(Color.GOLD);
+            } else if(userType.isMissingMap()){
+                titlefont.setColor(Color.RED);
+            } else if(userType.isReady()){
+                titlefont.setColor(Color.GREEN);
+            } else {
+                titlefont.setColor(Color.CYAN);
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            if (userType.getScore() != null) {
+                stringBuilder.append("[").append(userType.getScore()).append("] ");
+            }
+            stringBuilder.append(userType.getName());
+
+            titlefont.draw(sprite, stringBuilder.toString(), 90, (640 - 26 * i));
+        }
+    }
+
     public void findAndUpdateChart(String hash) {
         final SongData[] songs = main.getSongDatabase().getSongDatas(new String[]{hash});
 
@@ -234,7 +253,7 @@ public class MultiplayerRoom extends MainState {
             missingChart = false;
         } else {
             missingChart = true;
-            server.sendPacket(new UserNoMap());
+            server.sendTopicPacket("user.nomap");
         }
     }
 

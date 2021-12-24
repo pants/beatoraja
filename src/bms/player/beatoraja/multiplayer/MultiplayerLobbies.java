@@ -37,6 +37,7 @@ public class MultiplayerLobbies extends MainState {
     private PlayerConfig config;
 
     private MPServerConnection server;
+    private boolean failedToConnect = false;
 
     public MultiplayerLobbies(MainController main) {
         super(main);
@@ -67,8 +68,11 @@ public class MultiplayerLobbies extends MainState {
             final String host = serverAddress.split(":")[0];
             final int port = serverAddress.contains(":") ? Integer.parseInt(serverAddress.split(":")[1]) : 39079;
 
-            server.connect(host, port);
-            server.authenticate(config.getName(), "", "v0.19");
+            if (server.connect(host, port)) {
+                server.authenticate(config.getName(), "", "v0.19");
+            } else {
+                failedToConnect = true;
+            }
         }
     }
 
@@ -81,6 +85,13 @@ public class MultiplayerLobbies extends MainState {
                 keyboard.setLastPressedKey(-1);
             }
         }
+
+        if (input.isControlKeyPressed(KeyBoardInputProcesseor.ControlKeys.ESCAPE)) {
+            if (server.isConnected()) {
+                server.disconnect();
+            }
+            main.changeState(MainStateType.MUSICSELECT);
+        }
     }
 
     @Override
@@ -90,6 +101,7 @@ public class MultiplayerLobbies extends MainState {
             main.changeState(MainStateType.MULTIPLAYER_LOBBY);
             return;
         }
+
         final SpriteBatch sprite = main.getSpriteBatch();
         final float scaleX = (float) getSkin().getScaleX();
         final float scaleY = (float) getSkin().getScaleY();
@@ -149,7 +161,10 @@ public class MultiplayerLobbies extends MainState {
         titlefont.setColor(Color.CYAN);
         titlefont.draw(sprite, "Available Lobbies (" + server.getAvailableRooms().size() + ")", 80 * scaleX, 680 * scaleY);
 
-        if (!server.isConnected()) {
+        if (failedToConnect) {
+            titlefont.setColor(Color.RED);
+            titlefont.draw(sprite, "Failed to connect to multiplayer server", 90 * scaleX, 380 * scaleY);
+        } else if (!server.isConnected()) {
             titlefont.setColor(Color.WHITE);
             titlefont.draw(sprite, "Connecting to server...", 90 * scaleX, 380 * scaleY);
         } else if (server.getAvailableRooms().isEmpty()) {

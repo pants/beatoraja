@@ -27,6 +27,7 @@ public class PacketProcessor {
         packets.put("room.update", RoomUpdate.class);
         packets.put("game.started", GameStarted.class);
         packets.put("game.sync.start", GameSyncStart.class);
+        packets.put("game.scoreboard", GameScoreboard.class);
     }
 
     public void processPacket(String topic, String jsonStr) {
@@ -77,6 +78,7 @@ public class PacketProcessor {
 
         if (chartHash != null) {
             server.pendingChartUpdateHash = chartHash;
+
         }
     }
 
