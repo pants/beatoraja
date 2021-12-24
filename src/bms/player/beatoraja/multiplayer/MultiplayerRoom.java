@@ -73,6 +73,7 @@ public class MultiplayerRoom extends MainState {
         }
 
         server.syncedReady = false;
+        server.setGameStarted(false);
         server.sendPacket(new TopicPacket("room.update.get"));
     }
 

@@ -47,6 +47,7 @@ public class MPServerConnection extends Thread {
     public boolean pendingGameStart = false;
     public boolean joinRoom = false;
     public boolean syncedReady = false;
+    private boolean gameStarted;
 
     public MPServerConnection(MainController main) {
         this.main = main;
@@ -185,5 +186,13 @@ public class MPServerConnection extends Thread {
 
     public boolean isUserInRoom() {
         return isConnected() && getRoomData().getRoomInfo() != null;
+    }
+
+    public boolean isGameStarted() {
+        return gameStarted;
+    }
+
+    public void setGameStarted(boolean gameStarted) {
+        this.gameStarted = gameStarted;
     }
 }

@@ -92,7 +92,10 @@ public class PacketProcessor {
     private void onGameSyncStart(GameSyncStart gameSyncStart) {
         if (main.getCurrentState() instanceof BMSPlayer) {
             BMSPlayer player = (BMSPlayer) main.getCurrentState();
-            player.setReadyState();
+            if (player.getState() == BMSPlayer.STATE_WAITING_FOR_PLAYERS) {
+                player.setReadyState();
+            }
+            main.getMultiplayerServer().setGameStarted(true);
         }
     }
 }

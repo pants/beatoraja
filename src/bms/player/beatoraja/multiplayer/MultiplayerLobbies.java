@@ -104,7 +104,7 @@ public class MultiplayerLobbies extends MainState {
         } else {
             createButtonColor = Color.GREEN;
         }
-        float baseRoomY = getSkin().getHeight() - 120;
+        float baseRoomY = main.getConfig().getWindowHeight() - 120;
 
         sprite.begin();
 

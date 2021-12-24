@@ -521,7 +521,13 @@ public class BMSPlayer extends MainState {
 				final long cmem = Runtime.getRuntime().freeMemory();
 				Logger.getGlobal().info("current free memory : " + (cmem / (1024 * 1024)) + "MB , disposed : "
 						+ ((cmem - mem) / (1024 * 1024)) + "MB");
-				state = main.getMultiplayerServer().isUserInRoom() ? STATE_WAITING_FOR_PLAYERS : STATE_READY;
+
+				if(main.getMultiplayerServer().isUserInRoom() && !main.getMultiplayerServer().isGameStarted()){
+					state = STATE_WAITING_FOR_PLAYERS;
+				} else {
+					state = STATE_READY;
+				}
+
 				main.setTimerOn(TIMER_READY);
 				play(SOUND_READY);
 				Logger.getGlobal().info("STATE_READYに移行");
