@@ -295,6 +295,8 @@ public class JSONSkinLoader extends SkinLoader {
 				objectLoader = new JsonSkinConfigurationSkinObjectLoader(this);
 				break;
 			case KEY_CONFIG:
+			case MULTIPLAYER_LOBBIES:
+			case MULTIPLAYER_LOBBY:
 			default:
 				objectLoader = new JsonKeyConfigurationSkinObjectLoader(this);
 				break;				

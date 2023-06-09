@@ -179,6 +179,8 @@ public class SkinConfig implements Validatable {
 		PLAY24DOUBLE(SkinType.PLAY_24KEYS_DOUBLE, "skin/default/play24double.json"),
 		KEYCONFIG(SkinType.KEY_CONFIG, "skin/default/keyconfig/keyconfig.luaskin"),
 		SKINSELECT(SkinType.SKIN_SELECT, "skin/default/skinselect/skinselect.luaskin"),
+		MULTIPLAYERLOBBIES(SkinType.MULTIPLAYER_LOBBIES, "skin/default/multiplayerlobbies/multiplayerlobbies.luaskin"),
+		MULTIPLAYERLOBBY(SkinType.MULTIPLAYER_LOBBY, "skin/default/multiplayerlobbies/multiplayerlobbies.luaskin"),
 		;
 
 		public final SkinType type;

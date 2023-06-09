@@ -231,6 +231,9 @@ public class PlayConfigurationView implements Initializable {
 	private TextField ipfsurl;
 
 	@FXML
+	private TextField multiplayerhost;
+
+	@FXML
 	private VBox skin;
 	@FXML
 	private VideoConfigurationView videoController;
@@ -369,6 +372,7 @@ public class PlayConfigurationView implements Initializable {
 
 		enableIpfs.setSelected(config.isEnableIpfs());
 		ipfsurl.setText(config.getIpfsUrl());
+		multiplayerhost.setText(config.getMultiplayerServer());
 
 		if(players.getItems().contains(config.getPlayername())) {
 			players.setValue(config.getPlayername());
@@ -501,6 +505,7 @@ public class PlayConfigurationView implements Initializable {
 
 		config.setEnableIpfs(enableIpfs.isSelected());
 		config.setIpfsUrl(ipfsurl.getText());
+		config.setMultiplayerServer(multiplayerhost.getText());
 
 		config.setUseDiscordRPC(discord.isSelected());
 

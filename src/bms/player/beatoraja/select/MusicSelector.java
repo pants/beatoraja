@@ -391,6 +391,8 @@ public class MusicSelector extends MainState {
 
 		if (input.getControlKeyState(ControlKeys.NUM6)) {
 			changeState(MainStateType.CONFIG);
+		} else if(input.getControlKeyState(ControlKeys.NUM9)){
+			changeState(MainStateType.MULTIPLAYER_LOBBIES);
 		} else if (input.isActivated(KeyCommand.OPEN_SKIN_CONFIGURATION)) {
 			changeState(MainStateType.SKINCONFIG);
 		}
@@ -403,6 +405,10 @@ public class MusicSelector extends MainState {
 	}
 	
 	public void changeState(MainStateType type) {
+		if(main.getMultiplayerServer().isUserInRoom() && type == MainStateType.DECIDE){
+			type = MainStateType.MULTIPLAYER_LOBBY;
+		}
+
 		main.changeState(type);
 		if (search != null) {
 			search.unfocus(this);

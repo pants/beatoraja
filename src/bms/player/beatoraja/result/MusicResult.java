@@ -73,6 +73,10 @@ public class MusicResult extends AbstractResult {
 		gaugeType = resource.getGrooveGauge().getType();
 
 		loadSkin(SkinType.RESULT);
+
+		if(main.getMultiplayerServer().isUserInRoom()){
+			main.getMultiplayerServer().submitFinalScore();
+		}
 	}
 	
 	public void prepare() {
@@ -176,6 +180,11 @@ public class MusicResult extends AbstractResult {
 
 				final BMSPlayerInputProcessor input = main.getInputProcessor();
 				main.getInputProcessor().resetAllKeyChangedTime();
+
+                if (main.getMultiplayerServer().isUserInRoom()) {
+                    main.changeState(MainStateType.MULTIPLAYER_LOBBY);
+                    return;
+                }
 
 				if (resource.getCourseBMSModels() != null) {
 					if (resource.getGauge()[resource.getGrooveGauge().getType()]

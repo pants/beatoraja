@@ -1,0 +1,270 @@
+package bms.player.beatoraja.multiplayer;
+
+import bms.player.beatoraja.*;
+import bms.player.beatoraja.input.BMSPlayerInputProcessor;
+import bms.player.beatoraja.input.KeyBoardInputProcesseor;
+import bms.player.beatoraja.multiplayer.packets.out.*;
+import bms.player.beatoraja.multiplayer.skinning.MultiplayerLobbiesSkin;
+import bms.player.beatoraja.multiplayer.types.UserType;
+import bms.player.beatoraja.skin.SkinType;
+import bms.player.beatoraja.song.SongData;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
+import java.nio.file.Paths;
+import java.util.Optional;
+
+import static bms.player.beatoraja.skin.SkinProperty.*;
+
+public class MultiplayerRoom extends MainState {
+
+    private BitmapFont titlefont;
+    private BitmapFont chartTitleFont;
+    private ShapeRenderer shape;
+
+    private BMSPlayerInputProcessor input;
+    private KeyBoardInputProcesseor keyboard;
+    private PlayerConfig config;
+
+    private MPServerConnection server;
+    private String lastChartHash = null;
+    private SongData selectedChart;
+
+    private boolean missingChart = false;
+
+    public MultiplayerRoom(MainController main) {
+        super(main);
+    }
+
+    @Override
+    public void create() {
+        loadSkin(SkinType.MULTIPLAYER_LOBBY);
+        if (getSkin() == null) {
+            this.setSkin(new MultiplayerLobbiesSkin(Resolution.HD, main.getConfig().getResolution()));
+        }
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                Gdx.files.internal("skin/default/VL-Gothic-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = (int) (20 * getSkin().getScaleY());
+        titlefont = generator.generateFont(parameter);
+
+
+        shape = new ShapeRenderer();
+
+        input = main.getInputProcessor();
+        keyboard = input.getKeyBoardInputProcesseor();
+        config = main.getPlayerResource().getPlayerConfig();
+
+        server = main.getMultiplayerServer();
+
+        //todo: find a better way of handling this
+        final SongData songData = main.getPlayerResource().getSongdata();
+        if (songData != null) {
+            updateChart(songData, true);
+        }
+
+        server.syncedReady = false;
+        server.setGameStarted(false);
+        server.sendPacket(new RoomUpdateGet());
+    }
+
+    private void updateChart(SongData songData, boolean setChart) {
+        final String chartHash = songData.getSha256();
+
+        if (!chartHash.equals(lastChartHash)) {
+            if (chartTitleFont != null) {
+                chartTitleFont.dispose();
+                chartTitleFont = null;
+            }
+
+            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                    Gdx.files.internal("skin/default/VL-Gothic-Regular.ttf"));
+
+            FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+            parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+            parameter.size = (int) (20 * getSkin().getScaleY());
+            parameter.characters = songData.getFullTitle() + songData.getFullArtist();
+            chartTitleFont = generator.generateFont(parameter);
+
+            if (setChart) {
+                server.sendPacket(new RoomSetSong(songData.getTitle(), songData.getDifficulty(), songData.getLevel(), songData.getSha256()));
+            }
+        }
+
+        selectedChart = songData;
+        lastChartHash = songData.getSha256();
+    }
+
+    @Override
+    public void input() {
+        if (input.getKeyBoardInputProcesseor().getLastPressedKey() != -1) {
+            final int lastPressedKey = keyboard.getLastPressedKey();
+            keyboard.setLastPressedKey(-1);
+
+            switch (lastPressedKey)
+            {
+                case Input.Keys.NUM_2:
+                    main.changeState(MainStateType.MUSICSELECT);
+                    break;
+                case Input.Keys.NUM_3:
+                    server.sendPacket(new RoomUpdateGet());
+                    break;
+                case Input.Keys.NUM_4:
+                    server.sendPacket(new RoomOptionRotationToggle());
+                    break;
+                case Input.Keys.NUM_6:
+                    server.getRoomData().toggleReady();
+                    break;
+                case Input.Keys.NUM_7:
+                    server.getRoomData().startGame();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (input.isControlKeyPressed(KeyBoardInputProcesseor.ControlKeys.ESCAPE)) {
+            server.leaveRoom();
+            main.changeState(MainStateType.MULTIPLAYER_LOBBIES);
+        }
+    }
+
+    @Override
+    public void render() {
+        if (server.pendingGameStart) {
+            server.pendingGameStart = false;
+            startChart();
+            return;
+        }
+
+        if (server.pendingChartUpdateHash != null) {
+            findAndUpdateChart(server.pendingChartUpdateHash);
+            server.pendingChartUpdateHash = null;
+        }
+
+        final SpriteBatch sprite = main.getSpriteBatch();
+        final float scaleX = (float) getSkin().getScaleX();
+        final float scaleY = (float) getSkin().getScaleY();
+
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        TextureRegion textureRegion = getImage(IMAGE_STAGEFILE);
+        if (lastChartHash != null && textureRegion != null) {
+            sprite.begin();
+            sprite.draw(getImage(IMAGE_STAGEFILE).getTexture(), 0, 0, 500, 500);
+            sprite.end();
+        }
+
+        sprite.begin();
+
+        //Rectangle surrounding player list
+        shape.begin(ShapeRenderer.ShapeType.Line);
+        shape.setColor(Color.WHITE);
+        shape.rect(80 * scaleX, 100, 400, getSkin().getHeight() - 170);
+        shape.end();
+
+        //Rectangle surrounding current chart
+        shape.begin(ShapeRenderer.ShapeType.Line);
+        shape.setColor(Color.WHITE);
+        shape.rect(getSkin().getWidth() - 480, getSkin().getHeight() - 190, 400, 120);
+        shape.end();
+
+        sprite.end();
+
+
+        sprite.begin();
+        titlefont.setColor(Color.CYAN);
+
+        final RoomData roomData = server.getRoomData();
+        if (roomData.getRoomInfo() != null && roomData.getProperties() != null) {
+            String line = String.format("%s (%s/%s)",
+                    roomData.getRoomInfo().getName(),
+                    roomData.getProperties().getUsers().length, roomData.getRoomInfo().getMax());
+
+            titlefont.draw(sprite, line, 80 * scaleX, 680 * scaleY);
+
+            renderUsers(sprite, roomData);
+
+            //chart title:
+            if (lastChartHash != null) {
+                SongData data = selectedChart;
+                chartTitleFont.draw(sprite, data.getTitle() + " " + data.getSubtitle(), getSkin().getWidth() - 470, getSkin().getHeight() - 80);
+                chartTitleFont.draw(sprite, data.getFullArtist(), getSkin().getWidth() - 470, getSkin().getHeight() - 110);
+                titlefont.setColor(Color.CYAN);
+                titlefont.draw(sprite, "lv" +
+                        "" + data.getLevel(), getSkin().getWidth() - 470, getSkin().getHeight() - 140);
+            }
+
+            final Color readyColor = !server.getRoomData().isReady() ? Color.CYAN : Color.GREEN;
+            titlefont.draw(sprite, (server.getRoomData().isReady() ? "Unready" : "Ready") + " [6]", 90 * scaleX, 68 * scaleY);
+            titlefont.draw(sprite, "Start Game [7]", 230 * scaleX, 68 * scaleY);
+        } else {
+            titlefont.draw(sprite, "Loading..", 80 * scaleX, 680 * scaleY);
+        }
+        sprite.end();
+    }
+
+    private void renderUsers(SpriteBatch sprite, RoomData roomData) {
+        for (int i = 0; i < roomData.getProperties().getUsers().length; i++) {
+            final UserType userType = roomData.getProperties().getUsers()[i];
+
+            //host is null when in-game
+            final String hostId = Optional.ofNullable(roomData.getProperties().getHost()).orElse("");
+            if(hostId.equals(userType.getId())){
+                titlefont.setColor(Color.GOLD);
+            } else if(userType.isMissingMap()){
+                titlefont.setColor(Color.RED);
+            } else if(userType.isReady()){
+                titlefont.setColor(Color.GREEN);
+            } else {
+                titlefont.setColor(Color.CYAN);
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            if (userType.getScore() != null) {
+                stringBuilder.append("[").append(userType.getScore()).append("] ");
+            }
+            stringBuilder.append(userType.getName());
+
+            titlefont.draw(sprite, stringBuilder.toString(), 90, (640 - 26 * i));
+        }
+    }
+
+    public void findAndUpdateChart(String hash) {
+        final SongData[] songs = main.getSongDatabase().getSongDatas(new String[]{hash});
+
+        if (songs.length > 0) {
+            final SongData data = songs[0];
+            updateChart(data, false);
+            missingChart = false;
+        } else {
+            missingChart = true;
+            server.sendPacket(new UserNomap());
+        }
+    }
+
+    @Override
+    public void dispose() {
+        if (titlefont != null) {
+            titlefont.dispose();
+            titlefont = null;
+        }
+        super.dispose();
+    }
+
+    public void startChart() {
+        final SongData songData = selectedChart;
+        if (main.getPlayerResource().setBMSFile(Paths.get(songData.getPath()), BMSPlayerMode.PLAY)) {
+            main.changeState(MainStateType.DECIDE);
+        }
+    }
+}

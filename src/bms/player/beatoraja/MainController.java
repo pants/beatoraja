@@ -9,6 +9,9 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import bms.player.beatoraja.config.Discord;
+import bms.player.beatoraja.multiplayer.MPServerConnection;
+import bms.player.beatoraja.multiplayer.MultiplayerLobbies;
+import bms.player.beatoraja.multiplayer.MultiplayerRoom;
 import org.lwjgl.input.Mouse;
 
 import com.badlogic.gdx.*;
@@ -68,7 +71,11 @@ public class MainController extends ApplicationAdapter {
 	private MusicResult result;
 	private CourseResult gresult;
 	private KeyConfiguration keyconfig;
+	private MultiplayerLobbies multiplayerLobbies;
+	private MultiplayerRoom multiplayerRoom;
 	private SkinConfiguration skinconfig;
+
+	private MPServerConnection multiplayerServer;
 
 	private AudioDriver audio;
 
@@ -139,6 +146,7 @@ public class MainController extends ApplicationAdapter {
 		this.auto = auto;
 		this.config = config;
 		this.songUpdated = songUpdated;
+		this.multiplayerServer = new MPServerConnection(this);
 
 		for(int i = 0;i < offset.length;i++) {
 			offset[i] = new SkinOffset();
@@ -284,6 +292,12 @@ public class MainController extends ApplicationAdapter {
 		case SKINCONFIG:
 			newState = skinconfig;
 			break;
+		case MULTIPLAYER_LOBBIES:
+			newState = multiplayerLobbies;
+			break;
+		case MULTIPLAYER_LOBBY:
+			newState = multiplayerRoom;
+			break;
 		}
 
 		if (newState != null && current != newState) {
@@ -355,6 +369,8 @@ public class MainController extends ApplicationAdapter {
 		result = new MusicResult(this);
 		gresult = new CourseResult(this);
 		keyconfig = new KeyConfiguration(this);
+		multiplayerLobbies = new MultiplayerLobbies(this);
+		multiplayerRoom = new MultiplayerRoom(this);
 		skinconfig = new SkinConfiguration(this, player);
 		if (bmsfile != null) {
 			if(resource.setBMSFile(bmsfile, auto)) {
@@ -787,6 +803,10 @@ public class MainController extends ApplicationAdapter {
 
 	public static String getVersion() {
 		return VERSION;
+	}
+
+	public MPServerConnection getMultiplayerServer() {
+		return multiplayerServer;
 	}
 
 	abstract class UpdateThread extends Thread {

@@ -87,6 +87,7 @@ public class BMSPlayer extends MainState {
 	public static final int STATE_PLAY = 4;
 	public static final int STATE_FAILED = 5;
 	public static final int STATE_FINISHED = 6;
+	public static final int STATE_WAITING_FOR_PLAYERS = 7;
 
 	private long prevtime;
 
@@ -519,7 +520,13 @@ public class BMSPlayer extends MainState {
 				final long cmem = Runtime.getRuntime().freeMemory();
 				Logger.getGlobal().info("current free memory : " + (cmem / (1024 * 1024)) + "MB , disposed : "
 						+ ((cmem - mem) / (1024 * 1024)) + "MB");
-				state = STATE_READY;
+
+				if(main.getMultiplayerServer().isUserInRoom() && !main.getMultiplayerServer().isGameStarted()) {
+					state = STATE_WAITING_FOR_PLAYERS;
+				} else {
+					state = STATE_READY;
+				}
+
 				main.setTimerOn(TIMER_READY);
 				play(SOUND_READY);
 				Logger.getGlobal().info("STATE_READYに移行");
@@ -600,6 +607,11 @@ public class BMSPlayer extends MainState {
 				main.changeState(MainStateType.MUSICSELECT);
 			}
 			break;
+		case STATE_WAITING_FOR_PLAYERS:
+			if(!main.getMultiplayerServer().syncedReady) {
+				main.getMultiplayerServer().syncReady();
+			}
+			break;
 			// GET READY
 		case STATE_READY:
 			if (main.getNowTime(TIMER_READY) > skin.getPlaystart()) {
@@ -631,6 +643,11 @@ public class BMSPlayer extends MainState {
 					gaugelog[i].add(gauge.getValue(i));
 				}
 			}
+
+			if(main.getMultiplayerServer().isUserInRoom() && judge.getScoreData() != null) {
+				main.getMultiplayerServer().updateScore((int) ptime, judge.getScoreData().getExscore());
+			}
+
 			main.switchTimer(TIMER_GAUGE_MAX_1P, gauge.getGauge().isMax());
 
 			if(main.isTimerOn(TIMER_PM_CHARA_1P_NEUTRAL) && main.getNowTime(TIMER_PM_CHARA_1P_NEUTRAL) >= skin.getPMcharaTime(TIMER_PM_CHARA_1P_NEUTRAL - TIMER_PM_CHARA_1P_NEUTRAL) && main.getNowTime(TIMER_PM_CHARA_1P_NEUTRAL) % skin.getPMcharaTime(TIMER_PM_CHARA_1P_NEUTRAL - TIMER_PM_CHARA_1P_NEUTRAL) < 17) {
@@ -808,6 +825,10 @@ public class BMSPlayer extends MainState {
 		}
 
 		prevtime = micronow;
+	}
+
+	public void setReadyState(){
+		this.state = STATE_READY;
 	}
 
 	public void setPlaySpeed(int playspeed) {

@@ -154,6 +154,8 @@ public class Config implements Validatable {
 	private boolean enableIpfs = true;
 	private String ipfsurl = "https://gateway.ipfs.io/";
 
+	private String multiplayerServer;
+
 	private int irSendCount = 5;
 
 	private boolean useDiscordRPC = true;
@@ -455,6 +457,10 @@ public class Config implements Validatable {
 		this.ipfsurl = ipfsUrl;
 	}
 
+	public void setMultiplayerServer(String multiplayerServer) {
+		this.multiplayerServer = multiplayerServer;
+	}
+
 	public String getSongpath() {
 		return songpath;
 	}
@@ -605,6 +611,10 @@ public class Config implements Validatable {
 
 	public void setUseResolution(boolean useResolution) {
 		this.useResolution = useResolution;
+	}
+
+	public String getMultiplayerServer() {
+		return multiplayerServer;
 	}
 
 	public enum DisplayMode {
