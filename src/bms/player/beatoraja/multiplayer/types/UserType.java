@@ -11,6 +11,19 @@ public class UserType {
     private int clear; //0 exit, 1 failed, 2 clear, 3 hard clear, 4 fc
     private String extra_data;
 
+    public UserType(){}
+    public UserType(String id, String name, boolean ready, boolean missing_map, int level, Integer score, int combo, int clear, String extra_data) {
+        this.id = id;
+        this.name = name;
+        this.ready = ready;
+        this.missing_map = missing_map;
+        this.level = level;
+        this.score = score;
+        this.combo = combo;
+        this.clear = clear;
+        this.extra_data = extra_data;
+    }
+
     public String getName() {
         return name;
     }

@@ -115,12 +115,17 @@ public class MPServerConnection implements Runnable {
         try {
             Json json = new Json();
             json.setOutputType(JsonWriter.OutputType.json);
+            json.setTypeName(null);
+            json.setUsePrototypes(false);
+            json.setIgnoreUnknownFields(true);
 
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bos.write(1);
             String jsonStr = json.toJson(packet);
             bos.write(jsonStr.getBytes());
             bos.write((byte) '\n');
+
+            Logger.getGlobal().info("Sending Packet: " + jsonStr);
 
             outputStream.write(bos.toByteArray());
             outputStream.flush();
@@ -171,6 +176,14 @@ public class MPServerConnection implements Runnable {
 
     public String getUserId() {
         return userId;
+    }
+
+    public boolean isHost() {
+        if (getRoomData() == null) {
+            return false;
+        }
+
+        return getRoomData().isHost();
     }
 
     public void setUserId(String userId) {
